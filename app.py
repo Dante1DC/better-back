@@ -18,6 +18,17 @@ cur.execute(
         point_balance float
         );''') 
 
+cur.execute(
+    '''CREATE TABLE IF NOT EXISTS UserFriends (
+        uid INT,
+        fid INT,
+        CONSTRAINT fk_user FOREIGN KEY (uid) REFERENCES Users(id),
+        CONSTRAINT fk_friend FOREIGN KEY (fid) REFERENCES Users(id),
+        PRIMARY KEY (uid, fid)
+        );
+    '''
+)
+
 conn.commit() 
   
 cur.close() 
@@ -36,15 +47,21 @@ def index():
   
     # Select all products from the table 
     cur.execute('''SELECT * FROM Users''') 
-  
+    
     # Fetch the data 
     data = cur.fetchall() 
+
+    # Fetch user friends
+    cur.execute('''SELECT u.id, f.fid, uf.name FROM UserFriends f JOIN Users u ON f.uid = u.id JOIN Users uf ON f.fid = uf.id''')
+    
+    # Fetcg the user friends data
+    user_friends = cur.fetchall()
   
     # close the cursor and connection 
     cur.close() 
     conn.close() 
   
-    return render_template('index.html', data=data) 
+    return render_template('index.html', data=data, user_friends=user_friends) 
   
   
 @app.route('/create', methods=['POST']) 
@@ -99,6 +116,23 @@ def update():
     # commit the changes 
     conn.commit() 
     return redirect(url_for('index')) 
+
+@app.route('/add_friend', methods=['POST']) 
+def add_friend(): 
+    conn = psycopg2.connect(database="flask_db", user="postgres", password="password", host="localhost", port="5432") 
+    cur = conn.cursor()
+
+    uid = request.form['uid']
+    fid = request.form['fid']
+
+    # Insert the friendship data into the table
+    cur.execute('''INSERT INTO UserFriends (uid, fid) VALUES (%s, %s)''', (uid, fid))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for('index'))
 
 if __name__ == '__main__': 
     app.run(debug=True) 

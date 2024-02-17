@@ -21,6 +21,17 @@
 		<td>{{ row[2] }}</td> 
         <td>{{ row[3] }}</td> 
 		<td> 
+			<form action="/add_friend" method="post">
+				<input type="hidden" name="uid" value="{{ row[0] }}">
+				<select name="fid">
+					{% for user in data %}
+						{% if user[0] != row[0] %}
+							<option value="{{ user[0] }}">{{ user[1] }}</option>
+						{% endif %}
+					{% endfor %}
+				</select>
+				<input type="submit" value="Add Friend">
+			</form>
 			<form action="/update" method="post"> 
 			<input type="hidden" name="id" value="{{ row[0] }}"> 
 			<input type="text" name="name" value="{{ row[1] }}"> 
@@ -41,5 +52,29 @@
 	<input type="text" name="point_balance" placeholder="Point Balance"> 
 	<input type="submit" value="Create"> 
 	</form> 
+
+	
+	<h2>User's Friends</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>User ID</th>
+				<th>Friend's ID</th>
+				<th>Friend's Name</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for friend in user_friends %}
+			<tr>
+				<td>{{ friend[0] }}</td>
+				<td>{{ friend[1] }}</td>
+				<td>{{ friend[2] }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+
+
 </body> 
 </html> 
