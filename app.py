@@ -15,7 +15,7 @@ cur.execute(
         id serial PRIMARY KEY,
         name varchar(100),
         usd_balance float,
-        points_balance float
+        point_balance float
         );''') 
 
 conn.commit() 
