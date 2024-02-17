@@ -1,0 +1,45 @@
+<html> 
+<head> 
+	<title>Better Bets</title> 
+</head> 
+<body> 
+	<h1>Better Bets</h1> 
+	<table> 
+	<thead> 
+		<tr> 
+		<th>ID</th> 
+		<th>Name</th> 
+		<th>USD Balance</th> 
+		<th>Point Balance</th> 
+		</tr> 
+	</thead> 
+	<tbody> 
+		{% for row in data %} 
+		<tr> 
+		<td>{{ row[0] }}</td> 
+		<td>{{ row[1] }}</td> 
+		<td>{{ row[2] }}</td> 
+        <td>{{ row[3] }}</td> 
+		<td> 
+			<form action="/update" method="post"> 
+			<input type="hidden" name="id" value="{{ row[0] }}"> 
+			<input type="text" name="name" value="{{ row[1] }}"> 
+			<input type="text" name="usd_balance" value="{{ row[2] }}"> 
+            <input type="text" name="point_balance" value="{{ row[3] }}"> 
+			<input type="submit" value="Update"> 
+			</form> 
+		</td> 
+		</tr> 
+		{% endfor %} 
+	</tbody> 
+	</table> 
+	<h2>Create a new User</h2> 
+	<form action="/create" method="post"> 
+	<input type="text" name="name" placeholder="Name"> 
+	<input type="text" name="usd_balance" placeholder="USD Balance"> 
+    
+	<input type="text" name="point_balance" placeholder="Point Balance"> 
+	<input type="submit" value="Create"> 
+	</form> 
+</body> 
+</html> 
