@@ -251,6 +251,26 @@ def get_point_balance():
     conn.close()
     return str(point_balance)
 
+def table_to_json(table):
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT json_agg(%s) FROM %s
+                    ''',(table)
+                    )
+        returnable = cur.fetchall()
+        print(returnable,file=sys.stderr)
+    except Exception:
+        print("shit lmao")
+    
+    cur.close()
+    conn.close()
+
+    return returnable
+
 @app.route("/get_sports_db", methods=["POST"])
 @cross_origin()
 def get_sports_db():
@@ -274,6 +294,21 @@ def get_sports_db():
 
 
     return returnable
+
+@app.route("/get_moneylines", methods=["POST"])
+@cross_origin()
+def get_moneylines():
+    return table_to_json("Moneylines")
+
+@app.route("/get_spreads", methods=["POST"])
+@cross_origin()
+def get_spreads():
+    return table_to_json("Spreads")
+
+@app.route("/get_overunders", methods=["POST"])
+@cross_origin()
+def get_overunders():
+    return table_to_json("OverUnders")
 
 @app.route("/get_friends", methods=["POST"])
 @cross_origin()
