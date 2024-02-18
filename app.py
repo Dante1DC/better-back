@@ -516,8 +516,55 @@ def get_bets():
     finally:
         cur.close()
         conn.close()
-    
     return jsonify(undone_bets)
+
+
+@app.route("/end_bet", methods=["GET"])
+@cross_origin()
+def end_bet():
+    bet_id = 1
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''UPDATE bets SET done = true WHERE betid = %s''', ([bet_id]))
+        conn.commit()
+    except Exception as e:
+        print("Error ending bet:", e)
+        return jsonify({"error": "Failed to end bet"}), 500
+    
+    finally:
+        cur.close()
+        conn.close()
+    
+    return jsonify({"success": "Bet ended"})
+
+
+@app.route("/update_tokens", methods=["POST"])
+@cross_origin()
+def update_tokens():
+    user_id = request.get_json()["user_id"]
+    new_token_balance = request.get_json()["new_token_balance"]
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''UPDATE Users SET point_balance = %s WHERE id = %s''', (new_token_balance, user_id))
+        conn.commit()
+    except Exception as e:
+        print("Error updating tokens:", e)
+        return jsonify({"error": "Failed to update tokens"}), 500
+    
+    finally:
+        cur.close()
+        conn.close()
+    
+    return jsonify({"success": "Tokens updated"})
+
 
 
 
