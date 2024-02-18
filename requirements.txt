@@ -2,3 +2,4 @@ Flask
 psycopg2
 plaid-python
 flask-cors
+requests
