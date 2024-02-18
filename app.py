@@ -250,7 +250,7 @@ def get_point_balance():
     conn.close()
     return str(point_balance)
 
-@app.route("/get_sports_db", methods=["POST"])
+@app.route("/get_sports_db", methods=["GET"])
 @cross_origin()
 def get_sports_db():
 
