@@ -24,3 +24,31 @@ We used a large amount of utilities from the Plaid API, which is a financial and
 The primary design principles that guided our backend's development was security, useability, and access. We took a highly-layered approach with our web application stack for this reason: to try and divide our principles as much as possible. We built our database for scaleability, so future developers already have existing table and database structures pre-defined for them to use on our application. 
 ## Database
 We used a relational database with the following tables: Users, UserFriends, UserBets, Games, and three types of bet tables. Building it this way allowed for easy access to the relationships between the User, their current bets, and the games that those bets pertain to, all in one. 
+
+### Browser Actions
+=> index()
+Generates and fills a test index.html view that displays all information about Users except access tokens.
+
+=> create()
+Creates a new user.
+
+=> update()
+Updates user information, such as balance, token balance, friends, etc.
+
+=> add_friend()
+Adds a friend to somebody's account. If the request is verified, makes sure that the target's friends list is updated as well.
+
+=> create_link_token()
+Necessary implementation for Plaid API. It asks Plaid for a link token in order to establish a connection with the frontend and verify the validity of the session and the user's login.
+
+=> exhange_public_token()
+Exchanges the public token. The backend and the frontend will now be able to pass a verified access token that allows users to use the platform in a secured way.
+
+=> get_balance()
+Hands a given user ID's USD bank account balance to the frontend.
+
+=> get_point_balance()
+Hands a given user ID's points balance to the frontend.
+
+=> get_sports_db()
+Returns a json of all the current sports games with supported bookies to bet. 
