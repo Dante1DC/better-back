@@ -1,6 +1,9 @@
 # Better Bets Backend Implementation
 The following is an explanation of the technical architecture of the backend of the Better Bets application. For a comprehensive explanation of the whole project, see # Project Manifest in the Frontend's GitHub.
 
+# Frontend Link
+https://github.com/j-seibel/better-front
+
 ## Architecture
 ### Flask
 Flask is a Python framework package for building web applications. This framework supports and builds our backend, allowing rapid development with it's feature-filled debug mode.
