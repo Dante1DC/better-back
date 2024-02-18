@@ -215,7 +215,6 @@ def exchange_public_token():
     # associated with the currently signed-in user
     access_token = response['access_token']
 
-    print(response["access_token"], file=sys.stderr)
 
     if response["access_token"]: 
         update_user_puid(request.get_json()["user_id"], access_token)
@@ -245,7 +244,6 @@ def get_balance():
     
     prequest = AccountsBalanceGetRequest(access_token=access_token)
     response = client.accounts_balance_get(prequest)
-    print(response["accounts"][0], file=sys.stderr)
     # be weary, oh lone traveler
     # for ye who parse here will not come out the same
     return {"balance" : response['accounts'][0]["balances"]["current"]}
@@ -264,7 +262,6 @@ def get_point_balance():
                     ''', ([user_id])
                     )
         point_balance = cur.fetchall()[0][3]
-        print(point_balance,file=sys.stderr)
     except Exception:
         print("shit lmao")
     
@@ -289,7 +286,6 @@ def get_sports_db():
                     '''
                     )
         returnable = cur.fetchall()
-        print(returnable,file=sys.stderr)
     except Exception:
         print("shit lmao")
     
@@ -329,7 +325,6 @@ def get_odds_ml():
                     ''', ([GameID])
                     )
         home_team_odds = cur.fetchall()
-        print(home_team_odds,file=sys.stderr)
     except Exception:
         return [0,0]
     
@@ -338,7 +333,6 @@ def get_odds_ml():
                     ''', ([GameID])
                     )
         away_team_odds = cur.fetchall()
-        print(away_team_odds,file=sys.stderr)
     except Exception:
         return [0,0]
     
@@ -361,7 +355,6 @@ def get_odds_sp():
                     ''', ([GameID])
                     )
         home_team_odds = cur.fetchall()
-        print(home_team_odds,file=sys.stderr)
     except Exception:
         return [0,0]
     
@@ -370,7 +363,6 @@ def get_odds_sp():
                     ''', ([GameID])
                     )
         away_team_odds = cur.fetchall()
-        print(away_team_odds,file=sys.stderr)
     except Exception:
         return [0,0]
     
@@ -393,7 +385,6 @@ def get_odds_ou():
                     ''', ([GameID])
                     )
         home_team_odds = cur.fetchall()
-        print(home_team_odds,file=sys.stderr)
     except Exception:
         return [0,0]
     
@@ -402,7 +393,6 @@ def get_odds_ou():
                     ''', ([GameID])
                     )
         away_team_odds = cur.fetchall()
-        print(away_team_odds,file=sys.stderr)
     except Exception:
         return [0,0]
     
@@ -463,7 +453,6 @@ def get_friends():
                     ''', ([user_id])
                     )
         friends = cur.fetchall()
-        print(friends,file=sys.stderr)
     except Exception:
         print("shit lmao")
     
