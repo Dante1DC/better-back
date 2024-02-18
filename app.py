@@ -57,6 +57,23 @@ cur.execute(
         );
     '''
 )
+# cur.execute(
+#     '''DROP TABLE UserBets;
+#     '''
+# )
+# cur.execute(
+#     '''CREATE TABLE IF NOT EXISTS UserBets (
+#         uid INT,
+#         bid INT,
+#         type varchar(100),
+#         home_team_odds float,
+#         away_team_odds float,
+#         CONSTRAINT fk_user FOREIGN KEY (uid) REFERENCES Users(id),
+#         CONSTRAINT fk_bet FOREIGN KEY (bid) REFERENCES Users(id),
+#         PRIMARY KEY (uid, bid)
+#         );
+#     '''
+# )
 
 conn.commit() 
   
@@ -251,6 +268,9 @@ def get_point_balance():
     conn.close()
     return str(point_balance)
 
+
+
+
 @app.route("/get_sports_db", methods=["GET"])
 @cross_origin()
 def get_sports_db():
@@ -274,6 +294,156 @@ def get_sports_db():
 
 
     return returnable
+
+@app.route("/get_moneylines", methods=["POST"])
+@cross_origin()
+def get_moneylines():
+    return table_to_json("Moneylines")
+
+@app.route("/get_spreads", methods=["POST"])
+@cross_origin()
+def get_spreads():
+    return table_to_json("Spreads")
+
+@app.route("/get_overunders", methods=["POST"])
+@cross_origin()
+def get_overunders():
+    return table_to_json("OverUnders")
+
+# MUST BE POST
+@app.route("/get_odds_ml", methods=["POST"])
+@cross_origin()
+def get_odds_ml():
+    GameID = request.get_json()["GameID"]
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT home_team_odds FROM Moneylines WHERE GameID=%s
+                    ''', ([GameID])
+                    )
+        home_team_odds = cur.fetchall()
+        print(home_team_odds,file=sys.stderr)
+    except Exception:
+        return [0,0]
+    
+    try: 
+        cur.execute('''SELECT away_team_odds FROM Moneylines WHERE GameID=%s
+                    ''', ([GameID])
+                    )
+        away_team_odds = cur.fetchall()
+        print(away_team_odds,file=sys.stderr)
+    except Exception:
+        return [0,0]
+    
+    cur.close()
+    conn.close()
+    return [home_team_odds, away_team_odds]
+
+# MUST BE POST
+@app.route("/get_odds_sp", methods=["POST"])
+@cross_origin()
+def get_odds_sp():
+    GameID = request.get_json()["GameID"]
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT home_team_odds FROM Spreads WHERE GameID=%s
+                    ''', ([GameID])
+                    )
+        home_team_odds = cur.fetchall()
+        print(home_team_odds,file=sys.stderr)
+    except Exception:
+        return [0,0]
+    
+    try: 
+        cur.execute('''SELECT away_team_odds FROM Spreads WHERE GameID=%s
+                    ''', ([GameID])
+                    )
+        away_team_odds = cur.fetchall()
+        print(away_team_odds,file=sys.stderr)
+    except Exception:
+        return [0,0]
+    
+    cur.close()
+    conn.close()
+    return [home_team_odds, away_team_odds]
+
+# MUST BE POST
+@app.route("/get_odds_ou", methods=["POST"])
+@cross_origin()
+def get_odds_ou():
+    GameID = request.get_json()["GameID"]
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT home_team_odds FROM OverUnders WHERE GameID=%s
+                    ''', ([GameID])
+                    )
+        home_team_odds = cur.fetchall()
+        print(home_team_odds,file=sys.stderr)
+    except Exception:
+        return [0,0]
+    
+    try: 
+        cur.execute('''SELECT away_team_odds FROM OverUnders WHERE GameID=%s
+                    ''', ([GameID])
+                    )
+        away_team_odds = cur.fetchall()
+        print(away_team_odds,file=sys.stderr)
+    except Exception:
+        return [0,0]
+    
+    cur.close()
+    conn.close()
+    return [home_team_odds, away_team_odds]
+
+# @app.route("/recieve_bet", methods=["POST"])
+# @cross_origin()
+# def recieve_bet():
+#     bet_info = request.get_json()
+#     conn = psycopg2.connect(database="flask_db", 
+#                             user="postgres", 
+#                             password="password", 
+#                             host="localhost", port="5432") 
+#     cur = conn.cursor()
+#     if bet_info["type"] == "Moneyline":
+        
+#             cur.execute('''INSERT INTO UserBets (uid, bid, home_team_odds, away_team_odds)
+#                             VALUES (%s, %s, %s, %s)''',
+#                             (bet_info["uid"], bet_info["bid"], bet_info["home_team_odds"], bet_info["away_team_odds"])
+#                         )
+    
+        
+#     if bet_info["type"] == "Spread":
+#         try: 
+#             cur.execute('''INSERT INTO UserBets (uid, bid, home_team_odds, away_team_odds)
+#                             VALUES (%s, %s, %s, %s)''',
+#                             (bet_info["uid"], bet_info["bid"], bet_info["home_team_odds"], bet_info["away_team_odds"])
+#                         )
+#         except Exception:
+#             return {"confirmed" : "False"}
+    
+#     if bet_info["type"] == "OverUnder":
+#         try: 
+#             cur.execute('''INSERT INTO UserBets (uid, bid, home_team_odds, away_team_odds)
+#                             VALUES (%s, %s, %s, %s)''',
+#                             (bet_info["uid"], bet_info["bid"], bet_info["home_team_odds"], bet_info["away_team_odds"])
+#                         )
+#         except Exception:
+#             return {"confirmed" : "False"}
+
+#     cur.close()
+#     conn.close()
+#     return {"confirmed" : "True"}
 
 @app.route("/get_friends", methods=["POST"])
 @cross_origin()
