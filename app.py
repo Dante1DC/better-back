@@ -1,7 +1,33 @@
-from flask import Flask, render_template, request, redirect, url_for 
+import sys
+
+from flask import Flask, render_template, request, redirect, url_for , jsonify
 import psycopg2
+from flask_cors import CORS, cross_origin
+
+from plaid_app import get_link 
+
+from plaid_app import config
+
+import plaid
+
+from plaid.api import plaid_api
+
+from plaid.model.link_token_create_request import LinkTokenCreateRequest
+from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
+from plaid.model.products import Products
+from plaid.model.country_code import CountryCode
+
+from plaid.configuration import Configuration
+from plaid.api_client import ApiClient
+
+from help import update_user_puid
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 conn = psycopg2.connect(database="flask_db",  
                         user="postgres", 
@@ -9,14 +35,26 @@ conn = psycopg2.connect(database="flask_db",
                         host="localhost", port="5432") 
   
 cur = conn.cursor() 
-  
+
 cur.execute( 
     '''CREATE TABLE IF NOT EXISTS Users (
         id serial PRIMARY KEY,
         name varchar(100),
         usd_balance float,
-        point_balance float
+        point_balance float,
+        puid varchar(200)
         );''') 
+
+cur.execute(
+    '''CREATE TABLE IF NOT EXISTS UserFriends (
+        uid INT,
+        fid INT,
+        CONSTRAINT fk_user FOREIGN KEY (uid) REFERENCES Users(id),
+        CONSTRAINT fk_friend FOREIGN KEY (fid) REFERENCES Users(id),
+        PRIMARY KEY (uid, fid)
+        );
+    '''
+)
 
 conn.commit() 
   
@@ -36,15 +74,21 @@ def index():
   
     # Select all products from the table 
     cur.execute('''SELECT * FROM Users''') 
-  
+    
     # Fetch the data 
     data = cur.fetchall() 
+
+    # Fetch user friends
+    cur.execute('''SELECT u.id, f.fid, uf.name FROM UserFriends f JOIN Users u ON f.uid = u.id JOIN Users uf ON f.fid = uf.id''')
+    
+    # Fetcg the user friends data
+    user_friends = cur.fetchall()
   
     # close the cursor and connection 
     cur.close() 
     conn.close() 
   
-    return render_template('index.html', data=data) 
+    return render_template('index.html', data=data, user_friends=user_friends) 
   
   
 @app.route('/create', methods=['POST']) 
@@ -99,6 +143,109 @@ def update():
     # commit the changes 
     conn.commit() 
     return redirect(url_for('index')) 
+
+@app.route('/add_friend', methods=['POST']) 
+def add_friend(): 
+    conn = psycopg2.connect(database="flask_db", user="postgres", password="password", host="localhost", port="5432") 
+    cur = conn.cursor()
+
+    uid = request.form['uid']
+    fid = request.form['fid']
+
+    # Insert the friendship data into the table
+    cur.execute('''INSERT INTO UserFriends (uid, fid) VALUES (%s, %s)''', (uid, fid))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for('index'))
+
+api_client = plaid.ApiClient(config)
+client = plaid_api.PlaidApi(api_client)
+
+@app.route('/create_link_token', methods=['POST'])
+@cross_origin()
+def create_link_token():
+    # Assume a user ID is sent with the request
+    user_id = request.get_json()["user_id"]
+    link_token = get_link(user_id)
+    return jsonify({'link_token': link_token})
+
+
+access_token = None
+item_id = None
+
+@app.route('/exchange_public_token', methods=['POST'])
+def exchange_public_token():
+    global access_token
+    public_token = request.get_json()['public_token']
+    prequest = ItemPublicTokenExchangeRequest(
+      public_token=public_token
+    )
+    response = client.item_public_token_exchange(prequest)
+
+    # These values should be saved to a persistent database and
+    # associated with the currently signed-in user
+    access_token = response['access_token']
+
+    print(response["access_token"], file=sys.stderr)
+
+    if response["access_token"]: 
+        update_user_puid(request.get_json()["user_id"], access_token)
+
+    return jsonify({'public_token_exchange': 'complete'})
+
+@app.route("/get_balance", methods=["POST"])
+@cross_origin()
+def get_balance():
+    user_id = request.get_json()["user_id"]
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor() 
+    try:
+        cur.execute('''SELECT * FROM Users WHERE id=%s
+                    ''', ([user_id])
+                    )
+        access_token = cur.fetchall()[0][4]
+    except Exception:
+        print("shit lmao")
+
+    cur.close()
+    conn.close()
+    
+    
+    prequest = AccountsBalanceGetRequest(access_token=access_token)
+    response = client.accounts_balance_get(prequest)
+    print(response["accounts"][0], file=sys.stderr)
+    # be weary, oh lone traveler
+    # for ye who parse here will not come out the same
+    return {"balance" : response['accounts'][0]["balances"]["current"]}
+    
+@app.route("/get_point_balance", methods=["POST"])
+@cross_origin()
+def get_point_balance():
+    user_id = request.get_json()["user_id"]
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT * FROM Users WHERE id=%s
+                    ''', ([user_id])
+                    )
+        point_balance = cur.fetchall()[0][3]
+        print(point_balance,file=sys.stderr)
+    except Exception:
+        print("shit lmao")
+    
+    cur.close()
+    conn.close()
+    return str(point_balance)
+    
 
 if __name__ == '__main__': 
     app.run(debug=True) 
