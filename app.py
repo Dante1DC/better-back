@@ -224,6 +224,28 @@ def get_balance():
     # for ye who parse here will not come out the same
     return {"balance" : response['accounts'][0]["balances"]["current"]}
     
+@app.route("/get_point_balance", methods=["POST"])
+@cross_origin()
+def get_point_balance():
+    user_id = request.get_json()["user_id"]
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT * FROM Users WHERE id=%s
+                    ''', ([user_id])
+                    )
+        point_balance = cur.fetchall()[0][3]
+        print(point_balance,file=sys.stderr)
+    except Exception:
+        print("shit lmao")
+    
+    cur.close()
+    conn.close()
+    return str(point_balance)
+    
 
 if __name__ == '__main__': 
     app.run(debug=True) 
