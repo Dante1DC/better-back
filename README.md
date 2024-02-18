@@ -18,3 +18,6 @@ This is a library used for allowing cross-origin connections. We used this to co
 We used a large amount of utilities from the Plaid API, which is a financial and banking API for tracking different balances and transactions. This was integral for our use case.
 
 # Paradigm
+The primary design principles that guided our backend's development was security, useability, and access. We took a highly-layered approach with our web application stack for this reason: to try and divide our principles as much as possible. We built our database for scaleability, so future developers already have existing table and database structures pre-defined for them to use on our application. 
+## Database
+We used a relational database with the following tables: Users, UserFriends, UserBets, Games, and three types of bet tables. Building it this way allowed for easy access to the relationships between the User, their current bets, and the games that those bets pertain to, all in one. 
