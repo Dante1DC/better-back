@@ -13,12 +13,12 @@ def create_tables():
                         host="localhost", port="5432") 
     cur = conn.cursor() 
 
-    cur.execute( 
-        ''' drop table MoneyLines;
-            drop table Spreads;
-            drop table OverUnders; 
-            drop table Games;   
-            ''') 
+    # cur.execute( 
+    #     ''' drop table MoneyLines;
+    #         drop table Spreads;
+    #         drop table OverUnders; 
+    #         drop table Games;   
+    #         ''') 
     
     cur.execute( 
         '''CREATE TABLE IF NOT EXISTS Games (

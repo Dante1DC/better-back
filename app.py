@@ -24,6 +24,8 @@ from plaid.api_client import ApiClient
 
 from help import update_user_puid
 
+from odds_db_poplute import *
+
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -60,6 +62,8 @@ conn.commit()
   
 cur.close() 
 conn.close() 
+
+create_db()
 
 @app.route('/') 
 def index(): 
@@ -245,7 +249,30 @@ def get_point_balance():
     cur.close()
     conn.close()
     return str(point_balance)
+
+@app.route("/get_sports_db", methods=["POST"])
+@cross_origin()
+def get_sports_db():
+
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT json_agg(Games) FROM Games
+                    '''
+                    )
+        returnable = cur.fetchall()
+        print(returnable,file=sys.stderr)
+    except Exception:
+        print("shit lmao")
     
+    cur.close()
+    conn.close()
+
+
+    return returnable
 
 if __name__ == '__main__': 
     app.run(debug=True) 
