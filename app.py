@@ -158,6 +158,7 @@ def add_friend():
 
     # Insert the friendship data into the table
     cur.execute('''INSERT INTO UserFriends (uid, fid) VALUES (%s, %s)''', (uid, fid))
+    cur.execute('''INSERT INTO UserFriends (uid, fid) VALUES (%s, %s)''', (fid, uid))
 
     conn.commit()
     cur.close()
@@ -273,6 +274,29 @@ def get_sports_db():
 
 
     return returnable
+
+@app.route("/get_friends", methods=["POST"])
+@cross_origin()
+def get_friends():
+    user_id = request.get_json()["user_id"]
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT * FROM UserFriends WHERE uid=%s
+                    ''', ([user_id])
+                    )
+        friends = cur.fetchall()
+        print(friends,file=sys.stderr)
+    except Exception:
+        print("shit lmao")
+    
+    cur.close()
+    conn.close()
+    return friends
+
 
 if __name__ == '__main__': 
     app.run(debug=True) 
