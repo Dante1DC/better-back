@@ -1,6 +1,6 @@
 import sys
 
-from flask import Flask, render_template, request, redirect, url_for , jsonify
+from flask import Flask, render_template, request, redirect, url_for , jsonify, g
 import psycopg2
 from flask_cors import CORS, cross_origin
 
@@ -33,6 +33,14 @@ from flask import jsonify
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+def get_db():
+    if 'db' not in g:
+        g.db = psycopg2.connect(database="flask_db", 
+                                user="postgres", 
+                                password="password", 
+                                host="localhost", port="5432")
+    return g.db
 
 
 conn = psycopg2.connect(database="flask_db",  
@@ -315,10 +323,7 @@ def get_overunders():
 @cross_origin()
 def get_odds_ml():
     GameID = request.get_json()["GameID"]
-    conn = psycopg2.connect(database="flask_db", 
-                            user="postgres", 
-                            password="password", 
-                            host="localhost", port="5432") 
+    conn = get_db() 
     cur = conn.cursor()
     try: 
         cur.execute('''SELECT home_team_odds FROM Moneylines WHERE GameID=%s
@@ -337,7 +342,6 @@ def get_odds_ml():
         return [0,0]
     
     cur.close()
-    conn.close()
     return [home_team_odds, away_team_odds]
 
 # MUST BE POST
@@ -495,8 +499,8 @@ def get_bets():
                 'competitors': row[2],   # competitors is at index 2
                 'done': row[3]           # done is at index 3
             }
-            if not bet_dict['done']:
-                undone_bets.append(bet_dict)
+           
+            undone_bets.append(bet_dict)
         
     except Exception as e:
         print("Error fetching bets:", e)
@@ -534,7 +538,7 @@ def end_bet():
 @app.route("/update_tokens", methods=["POST"])
 @cross_origin()
 def update_tokens():
-    user_id = request.get_json()["user_id"]
+    user_id = 1
     new_token_balance = request.get_json()["new_token_balance"]
     conn = psycopg2.connect(database="flask_db", 
                             user="postgres", 
