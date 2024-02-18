@@ -10,6 +10,8 @@ from plaid_app import config
 
 import plaid
 
+from bets import *
+
 from plaid.api import plaid_api
 
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
@@ -25,6 +27,8 @@ from plaid.api_client import ApiClient
 from help import update_user_puid
 
 from odds_db_poplute import *
+
+from flask import jsonify
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -466,6 +470,56 @@ def get_friends():
     cur.close()
     conn.close()
     return friends
+
+@app.route("/add_bet", methods=["POST"])
+@cross_origin()
+def add_bet():
+    
+    token_amount = request.get_json()['token_amount']
+    cleared = False
+    competitors = request.get_json()['competitors']
+
+    update_bets(token_amount, competitors, cleared)
+    
+    
+    return {}
+
+
+@app.route("/get_bets", methods=["GET"])
+@cross_origin()
+def get_bets():
+    conn = psycopg2.connect(database="flask_db", 
+                            user="postgres", 
+                            password="password", 
+                            host="localhost", port="5432") 
+    cur = conn.cursor()
+    try: 
+        cur.execute('''SELECT * FROM bets''')
+        rows = cur.fetchall()
+        
+        # Filter bets where done is false
+        undone_bets = []
+        for row in rows:
+            bet_dict = {
+                'betid': row[0],         # betid is at index 0
+                'tokens': row[1],        # tokens is at index 1
+                'competitors': row[2],   # competitors is at index 2
+                'done': row[3]           # done is at index 3
+            }
+            if not bet_dict['done']:
+                undone_bets.append(bet_dict)
+        
+    except Exception as e:
+        print("Error fetching bets:", e)
+        return jsonify({"error": "Failed to fetch bets"}), 500
+    
+    finally:
+        cur.close()
+        conn.close()
+    
+    return jsonify(undone_bets)
+
+
 
 
 if __name__ == '__main__': 

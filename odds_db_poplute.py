@@ -2,10 +2,12 @@ from flask import Flask, render_template, request, redirect, url_for
 import psycopg2
 import requests
 import json
-
+from bets import *
 # drops the tables and creates the the tables for
 # games, moneylines, spreads, overunders
 def create_tables():
+    
+    make_bets_t()
 
     conn = psycopg2.connect(database="flask_db",  
                         user="postgres", 
